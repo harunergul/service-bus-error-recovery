@@ -13,9 +13,26 @@ export class DeadLetters implements OnInit {
   protected readonly deadLetters = signal<DeadLetter[]>([]);
   protected readonly notice = pageNotice();
   protected readonly loading = signal(false);
+  protected readonly clearing = signal(false);
 
   ngOnInit() {
     this.load();
+  }
+
+  protected clear() {
+    if (!confirm('Delete all dead letters? This cannot be undone.')) return;
+    this.clearing.set(true);
+    this.api.clearDeadLetters().subscribe({
+      next: ({ cleared }) => {
+        this.clearing.set(false);
+        this.load();
+        this.notice.set({ kind: 'success', text: `Cleared ${cleared} dead letters` });
+      },
+      error: err => {
+        this.clearing.set(false);
+        this.notice.set(errorNotice(err));
+      },
+    });
   }
 
   protected load() {

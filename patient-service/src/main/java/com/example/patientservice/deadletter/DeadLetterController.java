@@ -2,6 +2,7 @@ package com.example.patientservice.deadletter;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +21,15 @@ public class DeadLetterController {
 	@GetMapping
 	public List<DeadLetter> list(@RequestParam(defaultValue = "50") int max) {
 		return deadLetters.peek(max);
+	}
+
+	/** Deletes every dead letter, for local testing. */
+	@DeleteMapping
+	public Cleared clear() {
+		return new Cleared(deadLetters.clear());
+	}
+
+	public record Cleared(int cleared) {
 	}
 
 }

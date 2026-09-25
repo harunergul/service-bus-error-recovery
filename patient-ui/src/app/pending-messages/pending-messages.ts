@@ -13,10 +13,27 @@ export class PendingMessages implements OnInit {
   protected readonly messages = signal<PendingMessage[]>([]);
   protected readonly notice = pageNotice();
   protected readonly loading = signal(false);
+  protected readonly clearing = signal(false);
   protected readonly prettyBody = prettyBody;
 
   ngOnInit() {
     this.load();
+  }
+
+  protected clear() {
+    if (!confirm('Delete all pending messages? This cannot be undone.')) return;
+    this.clearing.set(true);
+    this.api.clearPendingMessages().subscribe({
+      next: ({ cleared }) => {
+        this.clearing.set(false);
+        this.load();
+        this.notice.set({ kind: 'success', text: `Cleared ${cleared} pending messages` });
+      },
+      error: err => {
+        this.clearing.set(false);
+        this.notice.set(errorNotice(err));
+      },
+    });
   }
 
   protected load() {

@@ -1,5 +1,6 @@
 package com.example.patientservice.deadletter;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.List;
 import com.azure.messaging.servicebus.ServiceBusClientBuilder;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceiverClient;
+import com.azure.messaging.servicebus.models.ServiceBusReceiveMode;
 import com.azure.messaging.servicebus.models.SubQueue;
 import jakarta.annotation.PreDestroy;
 
@@ -14,8 +16,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
- * Read-only access to the subscription's dead-letter queue. Peeking does not lock or remove
- * messages, so they stay in the queue.
+ * Access to the subscription's dead-letter queue. Peeking does not lock or remove messages, so
+ * they stay in the queue; {@link #clear()} deletes them, for local testing.
  */
 @Service
 public class DeadLetterService {
@@ -24,6 +26,9 @@ public class DeadLetterService {
 
 	private final ServiceBusReceiverClient receiver;
 
+	/** Removes each message as it is received; only used to clear the queue. */
+	private final ServiceBusReceiverClient deleter;
+
 	public DeadLetterService(@Value("${servicebus.connection-string}") String connectionString,
 			@Value("${servicebus.topic}") String topic, @Value("${servicebus.subscription}") String subscription) {
 		this.receiver = new ServiceBusClientBuilder().connectionString(connectionString)
@@ -31,6 +36,13 @@ public class DeadLetterService {
 			.topicName(topic)
 			.subscriptionName(subscription)
 			.subQueue(SubQueue.DEAD_LETTER_QUEUE)
+			.buildClient();
+		this.deleter = new ServiceBusClientBuilder().connectionString(connectionString)
+			.receiver()
+			.topicName(topic)
+			.subscriptionName(subscription)
+			.subQueue(SubQueue.DEAD_LETTER_QUEUE)
+			.receiveMode(ServiceBusReceiveMode.RECEIVE_AND_DELETE)
 			.buildClient();
 	}
 
@@ -51,9 +63,22 @@ public class DeadLetterService {
 		return all.stream().sorted(Comparator.comparing(DeadLetter::enqueuedTime).reversed()).limit(max).toList();
 	}
 
+	/** Deletes every dead letter and returns how many. */
+	public int clear() {
+		int cleared = 0;
+		int received;
+		do {
+			received = (int) deleter.receiveMessages(100, Duration.ofSeconds(1)).stream().count();
+			cleared += received;
+		}
+		while (received > 0);
+		return cleared;
+	}
+
 	@PreDestroy
 	void close() {
 		receiver.close();
+		deleter.close();
 	}
 
 }

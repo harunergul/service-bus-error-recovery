@@ -7,9 +7,14 @@
         Peeked, so they stay in the queue and no Delivery is counted.
       </p>
     </div>
-    <button type="button" class="secondary" (click)="load()" [disabled]="loading()">
-      {{ loading() ? 'Refreshing…' : 'Refresh' }}
-    </button>
+    <div class="actions">
+      <button type="button" class="secondary" (click)="clear()" [disabled]="loading() || clearing()">
+        {{ clearing() ? 'Clearing…' : 'Clear' }}
+      </button>
+      <button type="button" class="secondary" (click)="load()" [disabled]="loading() || clearing()">
+        {{ loading() ? 'Refreshing…' : 'Refresh' }}
+      </button>
+    </div>
   </div>
 
   @if (notice(); as n) {

@@ -83,6 +83,11 @@ h2 {
   margin-bottom: 1.25rem;
 }
 
+.card-header .actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .card-header p {
   margin: 0.15rem 0 0;
   color: var(--text-muted);

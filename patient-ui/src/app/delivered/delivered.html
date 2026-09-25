@@ -4,9 +4,14 @@
       <h2>Delivered <span class="count">{{ delivered().length }}</span></h2>
       <p>PatientMoved accepted by notification-service, newest first. A move delivered more than once is marked duplicate.</p>
     </div>
-    <button type="button" class="secondary" (click)="load()" [disabled]="loading()">
-      {{ loading() ? 'Refreshing…' : 'Refresh' }}
-    </button>
+    <div class="actions">
+      <button type="button" class="secondary" (click)="clear()" [disabled]="loading() || clearing()">
+        {{ clearing() ? 'Clearing…' : 'Clear' }}
+      </button>
+      <button type="button" class="secondary" (click)="load()" [disabled]="loading() || clearing()">
+        {{ loading() ? 'Refreshing…' : 'Refresh' }}
+      </button>
+    </div>
   </div>
 
   @if (notice(); as n) {

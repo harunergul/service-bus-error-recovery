@@ -36,6 +36,10 @@ export interface PendingMessage {
   body: string;
 }
 
+export interface Cleared {
+  cleared: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PatientApi {
   private readonly http = inject(HttpClient);
@@ -58,6 +62,14 @@ export class PatientApi {
 
   listDeadLetters() {
     return this.http.get<DeadLetter[]>('/api/dead-letters');
+  }
+
+  clearPendingMessages() {
+    return this.http.delete<Cleared>('/api/pending-messages');
+  }
+
+  clearDeadLetters() {
+    return this.http.delete<Cleared>('/api/dead-letters');
   }
 }
 

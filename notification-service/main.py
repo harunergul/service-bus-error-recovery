@@ -63,6 +63,10 @@ class Delivered(BaseModel):
     body: str
 
 
+class Cleared(BaseModel):
+    cleared: int
+
+
 class Outage(BaseModel):
     remainingSeconds: float
     totalSeconds: int
@@ -146,3 +150,12 @@ def list_delivered(limit: int = 200) -> list[Delivered]:
                       body=r["body"] or json.dumps({"moveId": r["move_id"], "patientId": r["patient_id"],
                                                     "room": r["room"], "movedAt": r["moved_at"]}))
             for r in rows]
+
+
+@app.delete("/delivered")
+def clear_delivered() -> Cleared:
+    """Deletes every delivered row, for local testing."""
+    with db() as connection:
+        cleared = connection.execute("DELETE FROM delivered").rowcount
+    log.warning("Cleared %s delivered", cleared)
+    return Cleared(cleared=cleared)

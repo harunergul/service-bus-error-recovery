@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { errorNotice, formatDuration, pageNotice, prettyBody } from '../patient-api';
+import { Cleared, errorNotice, formatDuration, pageNotice, prettyBody } from '../patient-api';
 
 interface Delivered {
   id: number;
@@ -27,6 +27,7 @@ export class DeliveredMessages implements OnInit {
   protected readonly delivered = signal<Delivered[]>([]);
   protected readonly notice = pageNotice();
   protected readonly loading = signal(false);
+  protected readonly clearing = signal(false);
   protected readonly prettyBody = prettyBody;
 
   /** The row whose message is open in the dialog. */
@@ -35,6 +36,22 @@ export class DeliveredMessages implements OnInit {
 
   ngOnInit() {
     this.load();
+  }
+
+  protected clear() {
+    if (!confirm('Delete all delivered messages? This cannot be undone.')) return;
+    this.clearing.set(true);
+    this.http.delete<Cleared>('/notification/delivered').subscribe({
+      next: ({ cleared }) => {
+        this.clearing.set(false);
+        this.load();
+        this.notice.set({ kind: 'success', text: `Cleared ${cleared} delivered messages` });
+      },
+      error: err => {
+        this.clearing.set(false);
+        this.notice.set(errorNotice(err));
+      },
+    });
   }
 
   protected load() {
