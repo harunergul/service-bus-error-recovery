@@ -1,0 +1,44 @@
+<section class="card">
+  <div class="card-header">
+    <div>
+      <h2>Delivered <span class="count">{{ delivered().length }}</span></h2>
+      <p>PatientMoved accepted by notification-service, newest first. A move delivered more than once is marked duplicate.</p>
+    </div>
+    <button type="button" class="secondary" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Refreshing…' : 'Refresh' }}
+    </button>
+  </div>
+
+  @if (notice(); as n) {
+    <p class="notice" [class]="n.kind">{{ n.text }}</p>
+  }
+
+  @if (delivered().length === 0) {
+    <div class="empty"><strong>Nothing delivered yet</strong>Record a move and it shows up here once notification-service accepts it.</div>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Move</th><th>Patient</th><th>Room</th><th>Moved</th><th>Received</th><th>Took</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (d of delivered(); track d.id) {
+            <tr>
+              <td class="mono">{{ d.moveId }}</td>
+              <td class="mono">{{ d.patientId }}</td>
+              <td>{{ d.room }}</td>
+              <td class="muted">{{ d.movedAt | date: 'HH:mm' }}</td>
+              <td class="muted">{{ d.receivedAt | date: 'HH:mm' }}</td>
+              <td class="muted">{{ took(d) }}</td>
+              <td>
+                @if (d.duplicate) {
+                  <span class="badge warning">duplicate</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
