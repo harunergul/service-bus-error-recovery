@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Notice, Patient, PatientApi, errorNotice } from '../patient-api';
+import { Patient, PatientApi, errorNotice, pageNotice } from '../patient-api';
 import { PatientPicker } from '../patient-picker/patient-picker';
 
 @Component({
@@ -13,7 +13,7 @@ export class PatientMove implements OnInit {
   private readonly api = inject(PatientApi);
 
   protected readonly patients = signal<Patient[]>([]);
-  protected readonly notice = signal<Notice | null>(null);
+  protected readonly notice = pageNotice();
 
   protected patientId: number | null = null;
   protected room = '';

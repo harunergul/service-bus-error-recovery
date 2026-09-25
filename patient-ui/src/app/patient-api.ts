@@ -1,5 +1,5 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 
 export interface Patient {
   id: number;
@@ -52,4 +52,26 @@ export interface Notice {
 
 export function errorNotice(err: HttpErrorResponse): Notice {
   return { kind: 'error', text: `Error ${err.status}: ${err.error?.message ?? err.message}` };
+}
+
+const SUCCESS_NOTICE_MS = 4000;
+
+/**
+ * Holds the notice shown on a page. Success notices hide themselves after 4 seconds; errors
+ * stay until replaced so they can be read. Call from a field initializer (needs injection context).
+ */
+export function pageNotice() {
+  const notice = signal<Notice | null>(null);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  inject(DestroyRef).onDestroy(() => clearTimeout(timer));
+
+  return Object.assign(notice.asReadonly(), {
+    set(value: Notice | null) {
+      clearTimeout(timer);
+      notice.set(value);
+      if (value?.kind === 'success') {
+        timer = setTimeout(() => notice.set(null), SUCCESS_NOTICE_MS);
+      }
+    },
+  });
 }

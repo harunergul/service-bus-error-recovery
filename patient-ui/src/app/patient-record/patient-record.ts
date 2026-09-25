@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Notice, Patient, PatientApi, errorNotice } from '../patient-api';
+import { Patient, PatientApi, errorNotice, pageNotice } from '../patient-api';
 
 @Component({
   selector: 'app-patient-record',
@@ -11,7 +11,7 @@ export class PatientRecord implements OnInit {
   private readonly api = inject(PatientApi);
 
   protected readonly patients = signal<Patient[]>([]);
-  protected readonly notice = signal<Notice | null>(null);
+  protected readonly notice = pageNotice();
 
   protected name = '';
   protected nationalIdentity = '';

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { DeadLetter, Notice, PatientApi, errorNotice } from '../patient-api';
+import { DeadLetter, PatientApi, errorNotice, pageNotice } from '../patient-api';
 
 @Component({
   selector: 'app-dead-letters',
@@ -11,7 +11,7 @@ export class DeadLetters implements OnInit {
   private readonly api = inject(PatientApi);
 
   protected readonly deadLetters = signal<DeadLetter[]>([]);
-  protected readonly notice = signal<Notice | null>(null);
+  protected readonly notice = pageNotice();
   protected readonly loading = signal(false);
 
   ngOnInit() {

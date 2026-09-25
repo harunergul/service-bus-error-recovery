@@ -6,10 +6,6 @@
     </div>
   </div>
 
-  @if (notice(); as n) {
-    <p class="notice" [class]="n.kind">{{ n.text }}</p>
-  }
-
   <form #registerForm="ngForm" (ngSubmit)="register()">
     <label>Name <input name="name" [(ngModel)]="name" placeholder="Ayşe Yılmaz" required /></label>
     <label>
@@ -18,6 +14,10 @@
     </label>
     <button type="submit" [disabled]="registerForm.invalid">Register</button>
   </form>
+
+  @if (notice(); as n) {
+    <p class="notice below" [class]="n.kind">{{ n.text }}</p>
+  }
 </section>
 
 <section class="card">

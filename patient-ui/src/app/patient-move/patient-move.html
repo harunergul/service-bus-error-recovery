@@ -6,10 +6,6 @@
     </div>
   </div>
 
-  @if (notice(); as n) {
-    <p class="notice" [class]="n.kind">{{ n.text }}</p>
-  }
-
   @if (patients().length === 0) {
     <div class="empty">
       <strong>No patients to move</strong>
@@ -24,5 +20,9 @@
       <label>Room <input name="room" [(ngModel)]="room" placeholder="ICU-3" required /></label>
       <button type="submit" [disabled]="moveForm.invalid || patientId === null">Record move</button>
     </form>
+  }
+
+  @if (notice(); as n) {
+    <p class="notice below" [class]="n.kind">{{ n.text }}</p>
   }
 </section>

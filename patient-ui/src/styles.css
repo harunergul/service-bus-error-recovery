@@ -188,6 +188,10 @@ button.secondary:hover:not(:disabled) {
   font-size: 0.9rem;
 }
 
+.notice.below {
+  margin: 1.25rem 0 0;
+}
+
 .notice::before {
   font-weight: 700;
 }
