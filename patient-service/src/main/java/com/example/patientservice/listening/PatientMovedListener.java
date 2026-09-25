@@ -6,6 +6,8 @@ import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
 import com.example.patientservice.move.PatientMoved;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +21,11 @@ import org.springframework.stereotype.Component;
 
 /**
  * Consumes PatientMoved from the topic subscription and forwards it to notification-service.
- * Auto-complete is off: a message is completed only after the Feign call succeeds. On failure
- * it is abandoned, so Service Bus redelivers it and dead-letters it after MaxDeliveryCount.
+ * Auto-complete is off: a message is completed only after the Feign call succeeds. A failed
+ * call is first retried in place (Resilience4j retry "notification-service", configured in
+ * application.properties; switched off with {@code listener.notification-retry.enabled=false}).
+ * If it still fails the message is abandoned, so Service Bus
+ * redelivers it and dead-letters it after MaxDeliveryCount.
  * <p>
  * The subscription requires sessions (session id = patient id). Each session is locked to one
  * receiver and delivered in order, so a Patient's moves are handled one after another while
@@ -36,13 +41,23 @@ public class PatientMovedListener {
 
 	private final NotificationServiceClient notificationService;
 
+	private final Retry notificationRetry;
+
+	private final boolean notificationRetryEnabled;
+
 	private final JsonMapper jsonMapper;
 
 	public PatientMovedListener(@Value("${servicebus.connection-string}") String connectionString,
 			@Value("${servicebus.topic}") String topic, @Value("${servicebus.subscription}") String subscription,
 			@Value("${listener.max-concurrent-sessions}") int maxConcurrentSessions,
-			NotificationServiceClient notificationService, JsonMapper jsonMapper) {
+			@Value("${listener.notification-retry.enabled}") boolean notificationRetryEnabled,
+			NotificationServiceClient notificationService, RetryRegistry retryRegistry, JsonMapper jsonMapper) {
 		this.notificationService = notificationService;
+		this.notificationRetryEnabled = notificationRetryEnabled;
+		this.notificationRetry = retryRegistry.retry("notification-service");
+		this.notificationRetry.getEventPublisher()
+			.onRetry(event -> log.warn("Call to notification-service failed (attempt {}), retrying in {}: {}",
+					event.getNumberOfRetryAttempts(), event.getWaitInterval(), event.getLastThrowable().getMessage()));
 		this.jsonMapper = jsonMapper;
 		this.processor = new ServiceBusClientBuilder().connectionString(connectionString)
 			.sessionProcessor()
@@ -58,7 +73,8 @@ public class PatientMovedListener {
 	@EventListener(ApplicationReadyEvent.class)
 	void start() {
 		processor.start();
-		log.info("Listening on subscription {}", processor.getSubscriptionName());
+		log.info("Listening on subscription {} (notification-service retry {})", processor.getSubscriptionName(),
+				notificationRetryEnabled ? "on" : "off");
 	}
 
 	@PreDestroy
@@ -70,7 +86,12 @@ public class PatientMovedListener {
 		ServiceBusReceivedMessage message = context.getMessage();
 		try {
 			PatientMoved event = jsonMapper.readValue(message.getBody().toString(), PatientMoved.class);
-			notificationService.patientMoved(event);
+			if (notificationRetryEnabled) {
+				notificationRetry.executeRunnable(() -> notificationService.patientMoved(event));
+			}
+			else {
+				notificationService.patientMoved(event);
+			}
 			context.complete();
 			log.info("Delivered {} (session {}, delivery {})", event, message.getSessionId(),
 					message.getDeliveryCount() + 1);
