@@ -5,6 +5,7 @@ import com.azure.messaging.servicebus.ServiceBusErrorContext;
 import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
+import com.azure.messaging.servicebus.models.AbandonOptions;
 import com.example.patientservice.move.PatientMoved;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -12,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,7 +26,8 @@ import org.springframework.stereotype.Component;
  * Consumes PatientMoved from the topic subscription and forwards it to notification-service
  * through {@link NotificationSender}. Auto-complete is off: a message is completed only after
  * notification-service accepts it. Otherwise it is abandoned, so Service Bus redelivers it and
- * dead-letters it after MaxDeliveryCount.
+ * dead-letters it after MaxDeliveryCount. Each abandon stamps {@link #LAST_FAILED_AT} on the message; the broker
+ * records no dead-lettering time, so on a dead letter this is when it was dead-lettered.
  * <p>
  * While the sender's circuit breaker is open, {@link ReceivingPause} stops the processor and
  * starts it again once notification-service answers a probe
@@ -38,6 +42,9 @@ import org.springframework.stereotype.Component;
 public class PatientMovedListener {
 
 	private static final Logger log = LoggerFactory.getLogger(PatientMovedListener.class);
+
+	/** Application property holding when the last Delivery failed (ISO-8601). */
+	public static final String LAST_FAILED_AT = "LastFailedAt";
 
 	private final ServiceBusProcessorClient processor;
 
@@ -91,7 +98,8 @@ public class PatientMovedListener {
 		catch (Exception ex) {
 			log.warn("Failed to deliver message {} (session {}, delivery {}), abandoning: {}", message.getMessageId(),
 					message.getSessionId(), message.getDeliveryCount() + 1, ex.getMessage());
-			context.abandon();
+			context.abandon(new AbandonOptions()
+				.setPropertiesToModify(Map.of(LAST_FAILED_AT, OffsetDateTime.now().toString())));
 		}
 	}
 

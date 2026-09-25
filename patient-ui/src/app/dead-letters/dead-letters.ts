@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { DeadLetter, PatientApi, errorNotice, pageNotice, prettyBody } from '../patient-api';
+import { DeadLetter, PatientApi, errorNotice, formatDuration, pageNotice, prettyBody } from '../patient-api';
 
 @Component({
   selector: 'app-dead-letters',
@@ -31,6 +31,11 @@ export class DeadLetters implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  /** Time from enqueue to dead-lettering, e.g. "1m 3s". */
+  protected took(deadLetter: DeadLetter) {
+    return deadLetter.deadLetteredTime ? formatDuration(deadLetter.enqueuedTime, deadLetter.deadLetteredTime) : '—';
   }
 
   protected readonly prettyBody = prettyBody;

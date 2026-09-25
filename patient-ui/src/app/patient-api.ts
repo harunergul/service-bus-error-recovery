@@ -22,6 +22,7 @@ export interface DeadLetter {
   reason: string;
   description: string;
   enqueuedTime: string;
+  deadLetteredTime: string | null;
   body: string;
 }
 
@@ -89,6 +90,15 @@ export function pageNotice() {
       }
     },
   });
+}
+
+/** A duration in whole seconds, e.g. "45s", "1m 3s", "1h 2m 5s". */
+export function formatDuration(from: string, to: string) {
+  const seconds = Math.max(0, Math.round((Date.parse(to) - Date.parse(from)) / 1000));
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
 /** Message bodies are JSON; indent them for reading, or show them as-is if they aren't. */

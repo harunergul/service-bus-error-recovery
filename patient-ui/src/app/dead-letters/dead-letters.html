@@ -19,14 +19,16 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Message</th><th>Patient (session)</th><th>Enqueued</th><th>Deliveries</th><th>Reason</th><th>Body</th></tr>
+          <tr><th>Message</th><th>Patient (session)</th><th>Enqueued</th><th>Dead-lettered</th><th>Took</th><th>Deliveries</th><th>Reason</th><th>Body</th></tr>
         </thead>
         <tbody>
           @for (deadLetter of deadLetters(); track deadLetter.sequenceNumber) {
             <tr>
               <td class="mono">{{ deadLetter.messageId }}</td>
               <td class="mono">{{ deadLetter.sessionId }}</td>
-              <td class="muted">{{ deadLetter.enqueuedTime | date: 'short' }}</td>
+              <td class="muted">{{ deadLetter.enqueuedTime | date: 'HH:mm' }}</td>
+              <td class="muted">{{ deadLetter.deadLetteredTime ? (deadLetter.deadLetteredTime | date: 'HH:mm') : '—' }}</td>
+              <td class="muted">{{ took(deadLetter) }}</td>
               <td><span class="badge warning">{{ deadLetter.deliveryCount }}</span></td>
               <td>
                 <span class="badge danger">{{ deadLetter.reason }}</span>
