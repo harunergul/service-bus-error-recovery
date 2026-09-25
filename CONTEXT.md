@@ -31,8 +31,16 @@ A service that receives every PatientMoved through its own subscription, indepen
 _Avoid_: Consumer (for the service), listener (that is the code, not the party)
 
 **Delivery**:
-One attempt to hand a PatientMoved to a Subscriber. It counts as successful only when the Subscriber accepts it; otherwise the event is offered again as a new Delivery.
+One offer of a PatientMoved to a Subscriber. It counts as successful only when one of its Call Attempts is accepted; otherwise the event is offered again as a new Delivery.
 _Avoid_: Retry (for a single attempt), try
+
+**Call Attempt**:
+One call handing a PatientMoved to the Subscriber's service within a Delivery. A Delivery makes several Call Attempts, waiting a little longer before each, and fails only when all of them fail or the service rejects the event as invalid (which another call would not fix).
+_Avoid_: Delivery (that is the whole offer), retry (for a single call)
+
+**Patient Order**:
+A Subscriber receives a Patient's PatientMoved events one at a time, in the order the moves were recorded. A PatientMoved that is still pending holds back that Patient's later ones, but never another Patient's.
+_Avoid_: Global order (events of different Patients have no order between them)
 
 **Pending Message**:
 A PatientMoved waiting for a Subscriber: not yet successfully delivered and not set aside as a Dead Letter. It may already have had failed Deliveries.
