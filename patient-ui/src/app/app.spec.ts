@@ -13,10 +13,10 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should link to the three pages', async () => {
+  it('should link to every page', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll('nav a')];
-    expect(links.map(a => a.getAttribute('href'))).toEqual(['/patients', '/moves', '/dead-letters']);
+    expect(links.map(a => a.getAttribute('href'))).toEqual(['/patients', '/moves', '/pending', '/dead-letters']);
   });
 });

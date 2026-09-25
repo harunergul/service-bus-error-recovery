@@ -24,6 +24,15 @@ export interface DeadLetter {
   body: string;
 }
 
+export interface PendingMessage {
+  messageId: string;
+  sequenceNumber: number;
+  deliveryCount: number;
+  state: string;
+  enqueuedTime: string;
+  body: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PatientApi {
   private readonly http = inject(HttpClient);
@@ -38,6 +47,10 @@ export class PatientApi {
 
   recordMove(patientId: number, room: string) {
     return this.http.post<PatientMove>('/api/patient-moves', { patientId, room });
+  }
+
+  listPendingMessages() {
+    return this.http.get<PendingMessage[]>('/api/pending-messages');
   }
 
   listDeadLetters() {
@@ -74,4 +87,13 @@ export function pageNotice() {
       }
     },
   });
+}
+
+/** Message bodies are JSON; indent them for reading, or show them as-is if they aren't. */
+export function prettyBody(body: string) {
+  try {
+    return JSON.stringify(JSON.parse(body), null, 2);
+  } catch {
+    return body;
+  }
 }

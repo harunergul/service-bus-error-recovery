@@ -301,3 +301,8 @@ pre.mono {
   margin-bottom: 0.25rem;
   color: var(--text);
 }
+
+.badge:not(.danger, .warning) {
+  background: var(--surface-muted);
+  color: var(--text-muted);
+}

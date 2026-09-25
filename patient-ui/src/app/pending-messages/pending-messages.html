@@ -1,0 +1,47 @@
+<section class="card">
+  <div class="card-header">
+    <div>
+      <h2>Pending messages <span class="count">{{ messages().length }}</span></h2>
+      <p>
+        PatientMoved waiting in the notification-service subscription, not yet delivered.
+        Peeked, so they stay in the queue and no Delivery is counted.
+      </p>
+    </div>
+    <button type="button" class="secondary" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Refreshing…' : 'Refresh' }}
+    </button>
+  </div>
+
+  @if (notice(); as n) {
+    <p class="notice" [class]="n.kind">{{ n.text }}</p>
+  }
+
+  @if (messages().length === 0) {
+    <div class="empty">
+      <strong>Nothing pending</strong>
+      Every PatientMoved has been delivered or dead-lettered. To see messages pile up, stop
+      notification-service or run patient-service with <code>--listener.enabled=false</code>.
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Message</th><th>Enqueued</th><th>Deliveries</th><th>State</th><th>Body</th></tr>
+        </thead>
+        <tbody>
+          @for (message of messages(); track message.sequenceNumber) {
+            <tr>
+              <td class="mono">{{ message.messageId }}</td>
+              <td class="muted">{{ message.enqueuedTime | date: 'short' }}</td>
+              <td>
+                <span class="badge" [class.warning]="message.deliveryCount > 0">{{ message.deliveryCount }}</span>
+              </td>
+              <td class="muted">{{ message.state }}</td>
+              <td><pre class="mono">{{ prettyBody(message.body) }}</pre></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

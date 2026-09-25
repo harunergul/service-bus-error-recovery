@@ -31,6 +31,7 @@ cd patient-ui && npm install && npm start
 
 - H2 console: http://localhost:8080/h2-console (JDBC URL `jdbc:h2:file:./data/patient-db`, user `sa`, no password)
 - notification-service API docs: http://localhost:8000/docs
+- Pending messages (in the subscription, not yet delivered): the "Pending messages" page in the UI (http://localhost:4200/pending), or `GET http://localhost:8080/api/pending-messages` (peek only)
 - Dead-letter queue: the "Dead letters" page in the UI (http://localhost:4200/dead-letters), or `GET http://localhost:8080/api/dead-letters` (peek only; messages stay in the queue)
 
 ## Experiments
