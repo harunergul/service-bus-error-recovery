@@ -34,6 +34,10 @@ _Avoid_: Consumer (for the service), listener (that is the code, not the party)
 One attempt to hand a PatientMoved to a Subscriber. It counts as successful only when the Subscriber accepts it; otherwise the event is offered again as a new Delivery.
 _Avoid_: Retry (for a single attempt), try
 
+**Pending Message**:
+A PatientMoved waiting for a Subscriber: not yet successfully delivered and not set aside as a Dead Letter. It may already have had failed Deliveries.
+_Avoid_: Active message, queued message
+
 **Dead Letter**:
 A PatientMoved set aside after it could not be delivered within the allowed number of Deliveries. It keeps its original content and the reason it was set aside, and stays until someone acts on it.
 _Avoid_: Failed message, error, poison message (a poison message is one that can never succeed; a Dead Letter may just have met a Subscriber that was down)
