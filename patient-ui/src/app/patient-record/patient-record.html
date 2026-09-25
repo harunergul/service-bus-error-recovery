@@ -1,0 +1,34 @@
+<section>
+  <h2>Register patient</h2>
+  <form #registerForm="ngForm" (ngSubmit)="register()">
+    <label>Name <input name="name" [(ngModel)]="name" required /></label>
+    <label>National identity <input name="nationalIdentity" [(ngModel)]="nationalIdentity" required /></label>
+    <button type="submit" [disabled]="registerForm.invalid">Register</button>
+  </form>
+</section>
+
+@if (message()) {
+  <p class="message">{{ message() }}</p>
+}
+
+<section>
+  <h2>Patients</h2>
+  @if (patients().length === 0) {
+    <p>No patients registered yet.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr><th>Id</th><th>Name</th><th>National identity</th></tr>
+      </thead>
+      <tbody>
+        @for (patient of patients(); track patient.id) {
+          <tr>
+            <td>{{ patient.id }}</td>
+            <td>{{ patient.name }}</td>
+            <td>{{ patient.nationalIdentity }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

@@ -1,0 +1,22 @@
+<section>
+  <h2>Record move</h2>
+  @if (patients().length === 0) {
+    <p>Register a patient first.</p>
+  }
+  <form #moveForm="ngForm" (ngSubmit)="recordMove()">
+    <label>
+      Patient
+      <select name="patientId" [(ngModel)]="patientId" required>
+        @for (patient of patients(); track patient.id) {
+          <option [ngValue]="patient.id">{{ patient.name }} ({{ patient.nationalIdentity }})</option>
+        }
+      </select>
+    </label>
+    <label>Room <input name="room" [(ngModel)]="room" required /></label>
+    <button type="submit" [disabled]="moveForm.invalid">Record move</button>
+  </form>
+</section>
+
+@if (message()) {
+  <p class="message">{{ message() }}</p>
+}

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 
 export interface Patient {
@@ -43,4 +43,8 @@ export class PatientApi {
   listDeadLetters() {
     return this.http.get<DeadLetter[]>('/api/dead-letters');
   }
+}
+
+export function errorMessage(err: HttpErrorResponse) {
+  return `Error ${err.status}: ${err.error?.message ?? err.message}`;
 }
