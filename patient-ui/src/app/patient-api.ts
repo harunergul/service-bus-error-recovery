@@ -16,6 +16,7 @@ export interface PatientMove {
 
 export interface DeadLetter {
   messageId: string;
+  sessionId: string;
   sequenceNumber: number;
   deliveryCount: number;
   reason: string;
@@ -26,6 +27,7 @@ export interface DeadLetter {
 
 export interface PendingMessage {
   messageId: string;
+  sessionId: string;
   sequenceNumber: number;
   deliveryCount: number;
   state: string;

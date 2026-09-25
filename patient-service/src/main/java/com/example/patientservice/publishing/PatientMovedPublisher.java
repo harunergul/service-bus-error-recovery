@@ -32,6 +32,8 @@ public class PatientMovedPublisher {
 		message.setMessageId(String.valueOf(event.moveId()));
 		message.setContentType("application/json");
 		message.setSubject("PatientMoved");
+		// One session per Patient: the subscription delivers a Patient's moves in order, one at a time.
+		message.setSessionId(String.valueOf(event.patientId()));
 		sender.sendMessage(message);
 		log.info("Published {}", event);
 	}

@@ -21,6 +21,10 @@ import org.springframework.stereotype.Component;
  * Consumes PatientMoved from the topic subscription and forwards it to notification-service.
  * Auto-complete is off: a message is completed only after the Feign call succeeds. On failure
  * it is abandoned, so Service Bus redelivers it and dead-letters it after MaxDeliveryCount.
+ * <p>
+ * The subscription requires sessions (session id = patient id). Each session is locked to one
+ * receiver and delivered in order, so a Patient's moves are handled one after another while
+ * different Patients are handled in parallel, up to {@code listener.max-concurrent-sessions}.
  */
 @Component
 @ConditionalOnProperty(name = "listener.enabled", havingValue = "true", matchIfMissing = true)
@@ -36,13 +40,15 @@ public class PatientMovedListener {
 
 	public PatientMovedListener(@Value("${servicebus.connection-string}") String connectionString,
 			@Value("${servicebus.topic}") String topic, @Value("${servicebus.subscription}") String subscription,
+			@Value("${listener.max-concurrent-sessions}") int maxConcurrentSessions,
 			NotificationServiceClient notificationService, JsonMapper jsonMapper) {
 		this.notificationService = notificationService;
 		this.jsonMapper = jsonMapper;
 		this.processor = new ServiceBusClientBuilder().connectionString(connectionString)
-			.processor()
+			.sessionProcessor()
 			.topicName(topic)
 			.subscriptionName(subscription)
+			.maxConcurrentSessions(maxConcurrentSessions)
 			.disableAutoComplete()
 			.processMessage(this::onMessage)
 			.processError(this::onError)
@@ -66,11 +72,12 @@ public class PatientMovedListener {
 			PatientMoved event = jsonMapper.readValue(message.getBody().toString(), PatientMoved.class);
 			notificationService.patientMoved(event);
 			context.complete();
-			log.info("Delivered {} (delivery {})", event, message.getDeliveryCount() + 1);
+			log.info("Delivered {} (session {}, delivery {})", event, message.getSessionId(),
+					message.getDeliveryCount() + 1);
 		}
 		catch (Exception ex) {
-			log.warn("Failed to deliver message {} (delivery {}), abandoning: {}", message.getMessageId(),
-					message.getDeliveryCount() + 1, ex.getMessage());
+			log.warn("Failed to deliver message {} (session {}, delivery {}), abandoning: {}", message.getMessageId(),
+					message.getSessionId(), message.getDeliveryCount() + 1, ex.getMessage());
 			context.abandon();
 		}
 	}

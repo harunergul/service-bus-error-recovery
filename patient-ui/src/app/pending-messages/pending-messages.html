@@ -26,12 +26,13 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Message</th><th>Enqueued</th><th>Deliveries</th><th>State</th><th>Body</th></tr>
+          <tr><th>Message</th><th>Patient (session)</th><th>Enqueued</th><th>Deliveries</th><th>State</th><th>Body</th></tr>
         </thead>
         <tbody>
           @for (message of messages(); track message.sequenceNumber) {
             <tr>
               <td class="mono">{{ message.messageId }}</td>
+              <td class="mono">{{ message.sessionId }}</td>
               <td class="muted">{{ message.enqueuedTime | date: 'short' }}</td>
               <td>
                 <span class="badge" [class.warning]="message.deliveryCount > 0">{{ message.deliveryCount }}</span>

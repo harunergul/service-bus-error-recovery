@@ -37,5 +37,6 @@ cd patient-ui && npm install && npm start
 ## Experiments
 
 - **Consumer down:** stop notification-service and record a move. The listener abandons the message, it is redelivered immediately, and after 10 deliveries (`MaxDeliveryCount` in `infra/servicebus/Config.json`) it goes to the dead-letter queue.
+- **Per-patient ordering (sessions):** the subscription requires sessions and the session id is the patient id, so each Patient's moves are delivered in order while different Patients are handled in parallel (`listener.max-concurrent-sessions`). A failing message holds up only its own Patient's later moves until it is delivered or dead-lettered. Changing `RequiresSession` needs an emulator restart, which recreates the subscription.
 - **Consumer paused:** start patient-service with `--listener.enabled=false`, record some moves, then restart it with the listener on and watch it catch up.
 - **Publish fails after save:** stop the emulator and record a move. The move is saved in H2, no event is sent, and the API returns 500 ([ADR-0001](docs/adr/0001-save-then-publish-without-outbox.md)).
