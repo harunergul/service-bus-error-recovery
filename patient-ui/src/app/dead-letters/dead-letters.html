@@ -2,7 +2,7 @@
   <div class="card-header">
     <div>
       <h2>Dead letters <span class="count">{{ deadLetters().length }}</span></h2>
-      <p>Peeked from the notification-service subscription. Messages stay in the queue.</p>
+      <p>Peeked from the notification-service subscription. Newest first; messages stay in the queue.</p>
     </div>
     <button type="button" class="secondary" (click)="load()" [disabled]="loading()">
       {{ loading() ? 'Refreshing…' : 'Refresh' }}

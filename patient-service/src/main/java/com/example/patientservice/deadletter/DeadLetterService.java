@@ -1,8 +1,11 @@
 package com.example.patientservice.deadletter;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import com.azure.messaging.servicebus.ServiceBusClientBuilder;
+import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceiverClient;
 import com.azure.messaging.servicebus.models.SubQueue;
 import jakarta.annotation.PreDestroy;
@@ -17,6 +20,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class DeadLetterService {
 
+	private static final int PAGE_SIZE = 100;
+
 	private final ServiceBusReceiverClient receiver;
 
 	public DeadLetterService(@Value("${servicebus.connection-string}") String connectionString,
@@ -29,9 +34,21 @@ public class DeadLetterService {
 			.buildClient();
 	}
 
+	/** The newest {@code max} dead letters, newest first. */
 	public List<DeadLetter> peek(int max) {
-		// Always peek from the first sequence number; a plain peek continues where the last one stopped.
-		return receiver.peekMessages(max, 0).stream().map(DeadLetter::from).toList();
+		// Service Bus only peeks oldest-first, so read the whole queue before picking the newest.
+		// Always start from an explicit sequence number; a plain peek continues where the last one stopped.
+		List<DeadLetter> all = new ArrayList<>();
+		long from = 0;
+		while (true) {
+			List<ServiceBusReceivedMessage> page = receiver.peekMessages(PAGE_SIZE, from).stream().toList();
+			if (page.isEmpty()) {
+				break;
+			}
+			page.stream().map(DeadLetter::from).forEach(all::add);
+			from = page.get(page.size() - 1).getSequenceNumber() + 1;
+		}
+		return all.stream().sorted(Comparator.comparing(DeadLetter::enqueuedTime).reversed()).limit(max).toList();
 	}
 
 	@PreDestroy
