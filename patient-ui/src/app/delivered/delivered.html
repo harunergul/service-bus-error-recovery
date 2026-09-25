@@ -19,7 +19,7 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Move</th><th>Patient</th><th>Room</th><th>Moved</th><th>Received</th><th>Took</th><th></th></tr>
+          <tr><th>Move</th><th>Patient</th><th>Room</th><th>Moved</th><th>Received</th><th>Took</th><th></th><th></th></tr>
         </thead>
         <tbody>
           @for (d of delivered(); track d.id) {
@@ -35,6 +35,7 @@
                   <span class="badge warning">duplicate</span>
                 }
               </td>
+              <td><button type="button" class="secondary small" (click)="view(d)">View</button></td>
             </tr>
           }
         </tbody>
@@ -42,3 +43,16 @@
     </div>
   }
 </section>
+
+<dialog #messageDialog class="message-dialog" (click)="closeOnBackdrop($event)" (close)="viewing.set(null)">
+  @if (viewing(); as d) {
+    <div class="card-header">
+      <div>
+        <h2>Move {{ d.moveId }}</h2>
+        <p>Received {{ d.receivedAt | date: 'HH:mm:ss' }}, as notification-service got it.</p>
+      </div>
+      <button type="button" class="secondary" (click)="close()" aria-label="Close">✕</button>
+    </div>
+    <pre class="mono">{{ prettyBody(d.body) }}</pre>
+  }
+</dialog>

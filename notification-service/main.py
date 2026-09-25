@@ -1,3 +1,4 @@
+import json
 import logging
 import sqlite3
 import time
@@ -34,6 +35,9 @@ with db() as connection:
             moved_at TEXT NOT NULL,
             received_at TEXT NOT NULL
         )""")
+    # Added later: the request body exactly as received; null on rows saved before it existed
+    if "body" not in {row["name"] for row in connection.execute("PRAGMA table_info(delivered)")}:
+        connection.execute("ALTER TABLE delivered ADD COLUMN body TEXT")
 
 
 class PatientMoved(BaseModel):
@@ -56,6 +60,7 @@ class Delivered(BaseModel):
     receivedAt: datetime
     duplicate: bool
     """True when this move was already delivered before: Service Bus delivers at least once."""
+    body: str
 
 
 class Outage(BaseModel):
@@ -116,16 +121,16 @@ def status_for(room: str) -> int:
 
 
 @app.post("/patient-moves")
-def patient_moved(event: PatientMoved) -> Response:
+async def patient_moved(event: PatientMoved, request: Request) -> Response:
     status = status_for(event.room)
     log.info("Patient %s moved to room %s at %s (move %s), answering %s",
              event.patientId, event.room, event.movedAt, event.moveId, int(status))
     if status.is_success:
         with db() as connection:
             connection.execute(
-                "INSERT INTO delivered (move_id, patient_id, room, moved_at, received_at) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO delivered (move_id, patient_id, room, moved_at, received_at, body) VALUES (?, ?, ?, ?, ?, ?)",
                 (event.moveId, event.patientId, event.room, event.movedAt.isoformat(),
-                 datetime.now(timezone.utc).isoformat()))
+                 datetime.now(timezone.utc).isoformat(), (await request.body()).decode()))
     return Response(status_code=status)
 
 
@@ -137,5 +142,7 @@ def list_delivered(limit: int = 200) -> list[Delivered]:
             SELECT d.*, EXISTS (SELECT 1 FROM delivered e WHERE e.move_id = d.move_id AND e.id < d.id) AS duplicate
             FROM delivered d ORDER BY d.id DESC LIMIT ?""", (limit,)).fetchall()
     return [Delivered(id=r["id"], moveId=r["move_id"], patientId=r["patient_id"], room=r["room"],
-                      movedAt=r["moved_at"], receivedAt=r["received_at"], duplicate=r["duplicate"])
+                      movedAt=r["moved_at"], receivedAt=r["received_at"], duplicate=r["duplicate"],
+                      body=r["body"] or json.dumps({"moveId": r["move_id"], "patientId": r["patient_id"],
+                                                    "room": r["room"], "movedAt": r["moved_at"]}))
             for r in rows]

@@ -176,6 +176,11 @@ button.secondary:hover:not(:disabled) {
   background: var(--accent-soft);
 }
 
+button.small {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+}
+
 /* Notices */
 
 .notice {

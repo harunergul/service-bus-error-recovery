@@ -1,0 +1,20 @@
+.message-dialog {
+  width: min(36rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.message-dialog::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+.message-dialog pre {
+  padding: 1rem;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
