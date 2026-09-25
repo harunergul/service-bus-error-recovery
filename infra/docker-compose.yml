@@ -1,0 +1,25 @@
+# Local Azure Service Bus emulator. It needs a SQL Server (here Azure SQL Edge) for its own storage.
+# Start: docker compose -f infra/docker-compose.yml up -d
+name: service-bus-recovery
+
+services:
+  servicebus-emulator:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    volumes:
+      - ./servicebus/Config.json:/ServiceBus_Emulator/ConfigFiles/Config.json
+    ports:
+      - "5672:5672" # AMQP
+      - "5300:5300" # health / management
+    environment:
+      SQL_SERVER: mssql
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      ACCEPT_EULA: ${ACCEPT_EULA}
+    depends_on:
+      - mssql
+
+  mssql:
+    # azure-sql-edge has a native arm64 build; mssql/server:2022 crashes under emulation on Apple Silicon
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    environment:
+      ACCEPT_EULA: ${ACCEPT_EULA}
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}

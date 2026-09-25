@@ -1,0 +1,56 @@
+<main>
+  <h1>Patient Moves</h1>
+
+  <section>
+    <h2>Register patient</h2>
+    <form #registerForm="ngForm" (ngSubmit)="register()">
+      <label>Name <input name="name" [(ngModel)]="name" required /></label>
+      <label>National identity <input name="nationalIdentity" [(ngModel)]="nationalIdentity" required /></label>
+      <button type="submit" [disabled]="registerForm.invalid">Register</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Record move</h2>
+    <form #moveForm="ngForm" (ngSubmit)="recordMove()">
+      <label>
+        Patient
+        <select name="patientId" [(ngModel)]="patientId" required>
+          @for (patient of patients(); track patient.id) {
+            <option [ngValue]="patient.id">{{ patient.name }} ({{ patient.nationalIdentity }})</option>
+          }
+        </select>
+      </label>
+      <label>Room <input name="room" [(ngModel)]="room" required /></label>
+      <button type="submit" [disabled]="moveForm.invalid">Record move</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Dead letters</h2>
+    <button type="button" (click)="loadDeadLetters()">Refresh</button>
+    @if (deadLetters().length === 0) {
+      <p>The dead-letter queue is empty.</p>
+    } @else {
+      <table>
+        <thead>
+          <tr><th>Message</th><th>Deliveries</th><th>Reason</th><th>Body</th></tr>
+        </thead>
+        <tbody>
+          @for (deadLetter of deadLetters(); track deadLetter.sequenceNumber) {
+            <tr>
+              <td>{{ deadLetter.messageId }}</td>
+              <td>{{ deadLetter.deliveryCount }}</td>
+              <td [title]="deadLetter.description">{{ deadLetter.reason }}</td>
+              <td><code>{{ deadLetter.body }}</code></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  @if (message()) {
+    <p class="message">{{ message() }}</p>
+  }
+</main>
