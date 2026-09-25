@@ -32,8 +32,9 @@ cd patient-ui && npm install && npm start
 - H2 console: http://localhost:8080/h2-console (JDBC URL `jdbc:h2:file:./data/patient-db`, user `sa`, no password)
 - notification-service API docs: http://localhost:8000/docs
 - Pending messages (in the subscription, not yet delivered): the "Pending messages" page in the UI (http://localhost:4200/pending), or `GET http://localhost:8080/api/pending-messages` (peek only)
-- Delivered (accepted by notification-service, kept in SQLite at `notification-service/data/`): the "Delivered" page in the UI (http://localhost:4200/delivered), or `GET http://localhost:8000/delivered` (`DELETE` clears it). Each accepted call is a row, so a move delivered twice is listed twice and marked duplicate
+- Delivered (accepted by notification-service, kept in SQLite at `notification-service/data/`): the "Delivered" page in the UI (http://localhost:4200/delivered), or `GET http://localhost:8000/delivered` (`DELETE` clears it). Each accepted call is a row, so a move delivered twice is listed twice and marked duplicate. The page stays up to date without refreshing: notification-service pushes the whole list over the WebSocket `ws://localhost:8000/delivered/live` when a browser connects and again after every change
 - Dead-letter queue: the "Dead letters" page in the UI (http://localhost:4200/dead-letters), or `GET http://localhost:8080/api/dead-letters` (peek only; messages stay in the queue). Each of these pages has a Clear button for local testing (`DELETE` on the same URL); clearing Pending messages skips any Patient whose session the listener holds at that moment
+- Pending messages and Dead letters refresh themselves every 3 seconds while the page is open and the browser tab is visible. Service Bus cannot tell us when they change, so they are peeked again; the Refresh button reloads at once
 
 ## Experiments
 

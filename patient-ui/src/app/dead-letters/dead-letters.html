@@ -5,6 +5,7 @@
       <p>Peeked from the notification-service subscription. Newest first; messages stay in the queue.</p>
     </div>
     <div class="actions">
+      <app-live-status [state]="live()" detail="Peeks the dead-letter queue every 3 seconds" />
       <button type="button" class="secondary" (click)="clear()" [disabled]="loading() || clearing()">
         {{ clearing() ? 'Clearing…' : 'Clear' }}
       </button>

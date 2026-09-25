@@ -8,6 +8,7 @@
       </p>
     </div>
     <div class="actions">
+      <app-live-status [state]="live()" detail="Peeks the subscription every 3 seconds" />
       <button type="button" class="secondary" (click)="clear()" [disabled]="loading() || clearing()">
         {{ clearing() ? 'Clearing…' : 'Clear' }}
       </button>

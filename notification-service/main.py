@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from http import HTTPStatus
 from pathlib import Path
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -135,6 +135,7 @@ async def patient_moved(event: PatientMoved, request: Request) -> Response:
                 "INSERT INTO delivered (move_id, patient_id, room, moved_at, received_at, body) VALUES (?, ?, ?, ?, ?, ?)",
                 (event.moveId, event.patientId, event.room, event.movedAt.isoformat(),
                  datetime.now(timezone.utc).isoformat(), (await request.body()).decode()))
+        await broadcast_delivered()
     return Response(status_code=status)
 
 
@@ -153,9 +154,46 @@ def list_delivered(limit: int = 200) -> list[Delivered]:
 
 
 @app.delete("/delivered")
-def clear_delivered() -> Cleared:
+async def clear_delivered() -> Cleared:
     """Deletes every delivered row, for local testing."""
     with db() as connection:
         cleared = connection.execute("DELETE FROM delivered").rowcount
     log.warning("Cleared %s delivered", cleared)
+    await broadcast_delivered()
     return Cleared(cleared=cleared)
+
+
+# Browsers watching the Delivered list. Each gets the whole list when it connects and again after
+# every change, so it never has to ask. In memory only: a restart drops them and they reconnect.
+delivered_watchers: set[WebSocket] = set()
+
+
+def delivered_json() -> str:
+    return json.dumps([delivered.model_dump(mode="json") for delivered in list_delivered()])
+
+
+async def broadcast_delivered() -> None:
+    if not delivered_watchers:
+        return
+    payload = delivered_json()
+    for watcher in list(delivered_watchers):
+        try:
+            await watcher.send_text(payload)
+        except Exception:
+            # Went away without a close handshake; its own endpoint below stops too
+            delivered_watchers.discard(watcher)
+
+
+@app.websocket("/delivered/live")
+async def watch_delivered(websocket: WebSocket) -> None:
+    await websocket.accept()
+    delivered_watchers.add(websocket)
+    try:
+        await websocket.send_text(delivered_json())
+        while True:
+            # The browser sends nothing; this only waits for it to disconnect
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        pass
+    finally:
+        delivered_watchers.discard(websocket)

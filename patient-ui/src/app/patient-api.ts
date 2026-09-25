@@ -104,6 +104,26 @@ export function pageNotice() {
   });
 }
 
+/** How often Pending messages and Dead letters ask again; Service Bus cannot tell us when they change. */
+export const AUTO_REFRESH_MS = 3000;
+
+/**
+ * Calls `refresh` every {@link AUTO_REFRESH_MS} while the page is open, skipping while the browser
+ * tab is hidden and catching up as soon as it is shown again. Call from a field initializer or
+ * constructor (needs injection context).
+ */
+export function autoRefresh(refresh: () => void) {
+  const refreshIfVisible = () => {
+    if (document.visibilityState === 'visible') refresh();
+  };
+  const timer = setInterval(refreshIfVisible, AUTO_REFRESH_MS);
+  document.addEventListener('visibilitychange', refreshIfVisible);
+  inject(DestroyRef).onDestroy(() => {
+    clearInterval(timer);
+    document.removeEventListener('visibilitychange', refreshIfVisible);
+  });
+}
+
 /** A duration in whole seconds, e.g. "45s", "1m 3s", "1h 2m 5s". */
 export function formatDuration(from: string, to: string) {
   const seconds = Math.max(0, Math.round((Date.parse(to) - Date.parse(from)) / 1000));

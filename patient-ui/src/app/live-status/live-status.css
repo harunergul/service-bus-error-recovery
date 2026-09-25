@@ -1,0 +1,27 @@
+.live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.live-status::before {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+/* Only a lost connection asks for attention */
+.live-status.offline {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.live-status.offline::before {
+  opacity: 1;
+}

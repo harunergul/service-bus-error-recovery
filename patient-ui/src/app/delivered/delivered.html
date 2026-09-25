@@ -5,11 +5,9 @@
       <p>PatientMoved accepted by notification-service, newest first. A move delivered more than once is marked duplicate.</p>
     </div>
     <div class="actions">
-      <button type="button" class="secondary" (click)="clear()" [disabled]="loading() || clearing()">
+      <app-live-status [state]="live()" detail="Pushed by notification-service over a WebSocket" />
+      <button type="button" class="secondary" (click)="clear()" [disabled]="clearing()">
         {{ clearing() ? 'Clearing…' : 'Clear' }}
-      </button>
-      <button type="button" class="secondary" (click)="load()" [disabled]="loading() || clearing()">
-        {{ loading() ? 'Refreshing…' : 'Refresh' }}
       </button>
     </div>
   </div>

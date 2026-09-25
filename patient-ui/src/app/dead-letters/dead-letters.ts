@@ -1,10 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { DeadLetter, PatientApi, errorNotice, formatDuration, pageNotice, prettyBody } from '../patient-api';
+import { DeadLetter, PatientApi, autoRefresh, errorNotice, formatDuration, pageNotice, prettyBody } from '../patient-api';
+import { LiveState, LiveStatus } from '../live-status/live-status';
 
 @Component({
   selector: 'app-dead-letters',
-  imports: [DatePipe],
+  imports: [DatePipe, LiveStatus],
   templateUrl: './dead-letters.html',
 })
 export class DeadLetters implements OnInit {
@@ -14,6 +15,13 @@ export class DeadLetters implements OnInit {
   protected readonly notice = pageNotice();
   protected readonly loading = signal(false);
   protected readonly clearing = signal(false);
+  protected readonly live = signal<LiveState>('connecting');
+
+  private polling = false;
+
+  constructor() {
+    autoRefresh(() => this.poll());
+  }
 
   ngOnInit() {
     this.load();
@@ -41,11 +49,33 @@ export class DeadLetters implements OnInit {
     this.api.listDeadLetters().subscribe({
       next: deadLetters => {
         this.deadLetters.set(deadLetters);
+        this.live.set('live');
         this.loading.set(false);
       },
       error: err => {
         this.notice.set(errorNotice(err));
+        this.live.set('offline');
         this.loading.set(false);
+      },
+    });
+  }
+
+  /**
+   * The automatic reload: no "Refreshing…" and the notice is left alone; a failure only shows
+   * as Offline. Skipped while another request is still running.
+   */
+  private poll() {
+    if (this.polling || this.loading() || this.clearing()) return;
+    this.polling = true;
+    this.api.listDeadLetters().subscribe({
+      next: deadLetters => {
+        this.deadLetters.set(deadLetters);
+        this.live.set('live');
+        this.polling = false;
+      },
+      error: () => {
+        this.live.set('offline');
+        this.polling = false;
       },
     });
   }
