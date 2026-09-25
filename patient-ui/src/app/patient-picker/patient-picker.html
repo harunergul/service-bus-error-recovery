@@ -1,0 +1,44 @@
+<div class="picker">
+  <input
+    role="combobox"
+    aria-autocomplete="list"
+    aria-controls="patient-options"
+    [attr.aria-expanded]="open()"
+    [attr.aria-activedescendant]="open() && matches().length ? 'patient-option-' + active() : null"
+    [value]="display()"
+    (input)="onInput($any($event.target).value)"
+    (focus)="open.set(true)"
+    (click)="open.set(true)"
+    (blur)="open.set(false)"
+    (keydown)="onKeydown($event)"
+    placeholder="Search by name or national identity…"
+    autocomplete="off"
+  />
+  @if (selected()) {
+    <button type="button" class="clear" title="Clear" (mousedown)="$event.preventDefault()" (click)="clear()">×</button>
+  }
+
+  @if (open()) {
+    <ul id="patient-options" role="listbox" class="options">
+      @for (patient of matches(); track patient.id; let i = $index) {
+        <li
+          role="option"
+          [id]="'patient-option-' + i"
+          [class.active]="i === active()"
+          [attr.aria-selected]="patient.id === selectedId()"
+          (mousedown)="$event.preventDefault()"
+          (click)="choose(patient)"
+          (mouseenter)="active.set(i)"
+        >
+          <span>{{ patient.name }}</span>
+          <span class="mono muted">{{ patient.nationalIdentity }}</span>
+        </li>
+      } @empty {
+        <li class="none">No patient matches “{{ query() }}”</li>
+      }
+      @if (hiddenCount() > 0) {
+        <li class="none">{{ hiddenCount() }} more — keep typing to narrow down</li>
+      }
+    </ul>
+  }
+</div>

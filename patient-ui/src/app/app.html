@@ -1,11 +1,18 @@
+<header>
+  <div class="bar">
+    <div class="brand"><span class="logo">⇄</span> Patient Moves</div>
+    <nav>
+      <a routerLink="/patients" routerLinkActive="active">Patient record</a>
+      <a routerLink="/moves" routerLinkActive="active">Patient move</a>
+      <a routerLink="/dead-letters" routerLinkActive="active">Dead letters</a>
+    </nav>
+    <button type="button" class="theme" (click)="toggleTheme()"
+            [title]="theme() === 'light' ? 'Switch to dark theme' : 'Switch to light theme'">
+      {{ theme() === 'light' ? '☾' : '☀' }}
+    </button>
+  </div>
+</header>
+
 <main>
-  <h1>Patient Moves</h1>
-
-  <nav>
-    <a routerLink="/patients" routerLinkActive="active">Patient record</a>
-    <a routerLink="/moves" routerLinkActive="active">Patient move</a>
-    <a routerLink="/dead-letters" routerLinkActive="active">Dead letters</a>
-  </nav>
-
   <router-outlet />
 </main>

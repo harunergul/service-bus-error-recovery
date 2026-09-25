@@ -1,29 +1,43 @@
-<section>
-  <h2>Dead letters</h2>
-  <button type="button" (click)="load()">Refresh</button>
+<section class="card">
+  <div class="card-header">
+    <div>
+      <h2>Dead letters <span class="count">{{ deadLetters().length }}</span></h2>
+      <p>Peeked from the notification-service subscription. Messages stay in the queue.</p>
+    </div>
+    <button type="button" class="secondary" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Refreshing…' : 'Refresh' }}
+    </button>
+  </div>
 
-  @if (message()) {
-    <p class="message">{{ message() }}</p>
+  @if (notice(); as n) {
+    <p class="notice" [class]="n.kind">{{ n.text }}</p>
   }
 
   @if (deadLetters().length === 0) {
-    <p>The dead-letter queue is empty.</p>
+    <div class="empty"><strong>The dead-letter queue is empty</strong>Every PatientMoved has been delivered.</div>
   } @else {
-    <table>
-      <thead>
-        <tr><th>Message</th><th>Enqueued</th><th>Deliveries</th><th>Reason</th><th>Body</th></tr>
-      </thead>
-      <tbody>
-        @for (deadLetter of deadLetters(); track deadLetter.sequenceNumber) {
-          <tr>
-            <td>{{ deadLetter.messageId }}</td>
-            <td>{{ deadLetter.enqueuedTime | date: 'short' }}</td>
-            <td>{{ deadLetter.deliveryCount }}</td>
-            <td [title]="deadLetter.description">{{ deadLetter.reason }}</td>
-            <td><code>{{ deadLetter.body }}</code></td>
-          </tr>
-        }
-      </tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Message</th><th>Enqueued</th><th>Deliveries</th><th>Reason</th><th>Body</th></tr>
+        </thead>
+        <tbody>
+          @for (deadLetter of deadLetters(); track deadLetter.sequenceNumber) {
+            <tr>
+              <td class="mono">{{ deadLetter.messageId }}</td>
+              <td class="muted">{{ deadLetter.enqueuedTime | date: 'short' }}</td>
+              <td><span class="badge warning">{{ deadLetter.deliveryCount }}</span></td>
+              <td>
+                <span class="badge danger">{{ deadLetter.reason }}</span>
+                @if (deadLetter.description) {
+                  <div class="muted">{{ deadLetter.description }}</div>
+                }
+              </td>
+              <td><pre class="mono">{{ prettyBody(deadLetter.body) }}</pre></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </section>

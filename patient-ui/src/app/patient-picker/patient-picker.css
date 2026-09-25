@@ -1,0 +1,78 @@
+:host {
+  display: block;
+}
+
+.picker {
+  position: relative;
+}
+
+input {
+  padding-right: 2.25rem;
+}
+
+.clear {
+  position: absolute;
+  top: 50%;
+  right: 0.4rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.clear:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.options {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  max-height: 20rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  font-size: 0.95rem;
+}
+
+li[role='option'] {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+li.active {
+  background: var(--accent-soft);
+}
+
+li[aria-selected='true'] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+li.none {
+  padding: 0.5rem 0.65rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

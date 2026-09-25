@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Patient, PatientApi, errorMessage } from '../patient-api';
+import { Notice, Patient, PatientApi, errorNotice } from '../patient-api';
 
 @Component({
   selector: 'app-patient-record',
@@ -11,7 +11,7 @@ export class PatientRecord implements OnInit {
   private readonly api = inject(PatientApi);
 
   protected readonly patients = signal<Patient[]>([]);
-  protected readonly message = signal('');
+  protected readonly notice = signal<Notice | null>(null);
 
   protected name = '';
   protected nationalIdentity = '';
@@ -23,19 +23,19 @@ export class PatientRecord implements OnInit {
   protected register() {
     this.api.registerPatient(this.name, this.nationalIdentity).subscribe({
       next: patient => {
-        this.message.set(`Registered ${patient.name} (id ${patient.id})`);
+        this.notice.set({ kind: 'success', text: `Registered ${patient.name} (id ${patient.id})` });
         this.name = '';
         this.nationalIdentity = '';
         this.loadPatients();
       },
-      error: err => this.message.set(errorMessage(err)),
+      error: err => this.notice.set(errorNotice(err)),
     });
   }
 
   private loadPatients() {
     this.api.listPatients().subscribe({
       next: patients => this.patients.set(patients),
-      error: err => this.message.set(errorMessage(err)),
+      error: err => this.notice.set(errorNotice(err)),
     });
   }
 }

@@ -45,6 +45,11 @@ export class PatientApi {
   }
 }
 
-export function errorMessage(err: HttpErrorResponse) {
-  return `Error ${err.status}: ${err.error?.message ?? err.message}`;
+export interface Notice {
+  kind: 'success' | 'error';
+  text: string;
+}
+
+export function errorNotice(err: HttpErrorResponse): Notice {
+  return { kind: 'error', text: `Error ${err.status}: ${err.error?.message ?? err.message}` };
 }

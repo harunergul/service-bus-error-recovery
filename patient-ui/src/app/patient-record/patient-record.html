@@ -1,34 +1,48 @@
-<section>
-  <h2>Register patient</h2>
+<section class="card">
+  <div class="card-header">
+    <div>
+      <h2>Register patient</h2>
+      <p>Each National Identity can belong to only one patient.</p>
+    </div>
+  </div>
+
+  @if (notice(); as n) {
+    <p class="notice" [class]="n.kind">{{ n.text }}</p>
+  }
+
   <form #registerForm="ngForm" (ngSubmit)="register()">
-    <label>Name <input name="name" [(ngModel)]="name" required /></label>
-    <label>National identity <input name="nationalIdentity" [(ngModel)]="nationalIdentity" required /></label>
+    <label>Name <input name="name" [(ngModel)]="name" placeholder="Ayşe Yılmaz" required /></label>
+    <label>
+      National identity
+      <input name="nationalIdentity" [(ngModel)]="nationalIdentity" placeholder="12345678901" required />
+    </label>
     <button type="submit" [disabled]="registerForm.invalid">Register</button>
   </form>
 </section>
 
-@if (message()) {
-  <p class="message">{{ message() }}</p>
-}
+<section class="card">
+  <div class="card-header">
+    <h2>Patients <span class="count">{{ patients().length }}</span></h2>
+  </div>
 
-<section>
-  <h2>Patients</h2>
   @if (patients().length === 0) {
-    <p>No patients registered yet.</p>
+    <div class="empty"><strong>No patients yet</strong>Register one above to get started.</div>
   } @else {
-    <table>
-      <thead>
-        <tr><th>Id</th><th>Name</th><th>National identity</th></tr>
-      </thead>
-      <tbody>
-        @for (patient of patients(); track patient.id) {
-          <tr>
-            <td>{{ patient.id }}</td>
-            <td>{{ patient.name }}</td>
-            <td>{{ patient.nationalIdentity }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Id</th><th>Name</th><th>National identity</th></tr>
+        </thead>
+        <tbody>
+          @for (patient of patients(); track patient.id) {
+            <tr>
+              <td class="muted mono">#{{ patient.id }}</td>
+              <td>{{ patient.name }}</td>
+              <td class="mono">{{ patient.nationalIdentity }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </section>

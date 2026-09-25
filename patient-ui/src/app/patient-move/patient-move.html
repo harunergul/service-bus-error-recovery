@@ -1,22 +1,28 @@
-<section>
-  <h2>Record move</h2>
-  @if (patients().length === 0) {
-    <p>Register a patient first.</p>
-  }
-  <form #moveForm="ngForm" (ngSubmit)="recordMove()">
-    <label>
-      Patient
-      <select name="patientId" [(ngModel)]="patientId" required>
-        @for (patient of patients(); track patient.id) {
-          <option [ngValue]="patient.id">{{ patient.name }} ({{ patient.nationalIdentity }})</option>
-        }
-      </select>
-    </label>
-    <label>Room <input name="room" [(ngModel)]="room" required /></label>
-    <button type="submit" [disabled]="moveForm.invalid">Record move</button>
-  </form>
-</section>
+<section class="card">
+  <div class="card-header">
+    <div>
+      <h2>Record move</h2>
+      <p>Saves the move and publishes PatientMoved to the patient-moved topic.</p>
+    </div>
+  </div>
 
-@if (message()) {
-  <p class="message">{{ message() }}</p>
-}
+  @if (notice(); as n) {
+    <p class="notice" [class]="n.kind">{{ n.text }}</p>
+  }
+
+  @if (patients().length === 0) {
+    <div class="empty">
+      <strong>No patients to move</strong>
+      <a routerLink="/patients">Register a patient</a> first.
+    </div>
+  } @else {
+    <form #moveForm="ngForm" (ngSubmit)="recordMove()">
+      <label>
+        Patient
+        <app-patient-picker [patients]="patients()" [(selectedId)]="patientId" />
+      </label>
+      <label>Room <input name="room" [(ngModel)]="room" placeholder="ICU-3" required /></label>
+      <button type="submit" [disabled]="moveForm.invalid || patientId === null">Record move</button>
+    </form>
+  }
+</section>
