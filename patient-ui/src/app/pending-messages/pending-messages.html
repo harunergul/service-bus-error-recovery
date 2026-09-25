@@ -2,10 +2,6 @@
   <div class="card-header">
     <div>
       <h2>Pending messages <span class="count">{{ messages().length }}</span></h2>
-      <p>
-        PatientMoved waiting in the notification-service subscription, not yet delivered.
-        Peeked, so they stay in the queue and no Delivery is counted.
-      </p>
     </div>
     <div class="actions">
       <app-live-status [state]="live()" detail="Peeks the subscription every 3 seconds" />
@@ -23,11 +19,7 @@
   }
 
   @if (messages().length === 0) {
-    <div class="empty">
-      <strong>Nothing pending</strong>
-      Every PatientMoved has been delivered or dead-lettered. To see messages pile up, stop
-      notification-service or run patient-service with <code>--listener.enabled=false</code>.
-    </div>
+    <div class="empty"><strong>Nothing pending</strong></div>
   } @else {
     <div class="table-wrap">
       <table>

@@ -2,7 +2,6 @@
   <div class="card-header">
     <div>
       <h2>Register patient</h2>
-      <p>Each National Identity can belong to only one patient.</p>
     </div>
   </div>
 
@@ -26,7 +25,7 @@
   </div>
 
   @if (patients().length === 0) {
-    <div class="empty"><strong>No patients yet</strong>Register one above to get started.</div>
+    <div class="empty"><strong>No patients yet</strong></div>
   } @else {
     <div class="table-wrap">
       <table>

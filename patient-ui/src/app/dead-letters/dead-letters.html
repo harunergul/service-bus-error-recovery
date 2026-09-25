@@ -2,7 +2,6 @@
   <div class="card-header">
     <div>
       <h2>Dead letters <span class="count">{{ deadLetters().length }}</span></h2>
-      <p>Peeked from the notification-service subscription. Newest first; messages stay in the queue.</p>
     </div>
     <div class="actions">
       <app-live-status [state]="live()" detail="Peeks the dead-letter queue every 3 seconds" />
@@ -20,7 +19,7 @@
   }
 
   @if (deadLetters().length === 0) {
-    <div class="empty"><strong>The dead-letter queue is empty</strong>Every PatientMoved has been delivered.</div>
+    <div class="empty"><strong>No dead letters</strong></div>
   } @else {
     <div class="table-wrap">
       <table>

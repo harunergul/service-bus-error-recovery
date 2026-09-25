@@ -2,7 +2,6 @@
   <div class="card-header">
     <div>
       <h2>Delivered <span class="count">{{ delivered().length }}</span></h2>
-      <p>PatientMoved accepted by notification-service, newest first. A move delivered more than once is marked duplicate.</p>
     </div>
     <div class="actions">
       <app-live-status [state]="live()" detail="Pushed by notification-service over a WebSocket" />
@@ -17,7 +16,7 @@
   }
 
   @if (delivered().length === 0) {
-    <div class="empty"><strong>Nothing delivered yet</strong>Record a move and it shows up here once notification-service accepts it.</div>
+    <div class="empty"><strong>Nothing delivered yet</strong></div>
   } @else {
     <div class="table-wrap">
       <table>
@@ -52,7 +51,7 @@
     <div class="card-header">
       <div>
         <h2>Move {{ d.moveId }}</h2>
-        <p>Received {{ d.receivedAt | date: 'HH:mm:ss' }}, as notification-service got it.</p>
+        <p>Received {{ d.receivedAt | date: 'HH:mm:ss' }}</p>
       </div>
       <button type="button" class="secondary" (click)="close()" aria-label="Close">✕</button>
     </div>
