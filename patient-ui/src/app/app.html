@@ -13,6 +13,23 @@
       {{ theme() === 'light' ? '☾' : '☀' }}
     </button>
   </div>
+  @if (outage.down()) {
+    <div class="outage-banner" role="status">
+      <div class="outage-banner-row">
+        <strong>notification-service outage</strong>
+        <span>Answering 503 to every PatientMoved and probe for <span class="mono countdown">{{ outage.countdown() }}</span></span>
+        <button type="button" class="secondary small" (click)="endOutage()">End now</button>
+      </div>
+      <div class="outage-banner-fill" [style.width.%]="outage.progress()"></div>
+    </div>
+  } @else if (!outage.reachable()) {
+    <div class="outage-banner" role="status">
+      <div class="outage-banner-row">
+        <strong>notification-service is not answering</strong>
+        <span>It may be stopped. Checking again every few seconds.</span>
+      </div>
+    </div>
+  }
 </header>
 
 <main>

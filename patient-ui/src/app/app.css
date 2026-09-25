@@ -87,3 +87,46 @@ button.theme:hover {
   background: var(--accent-soft);
   color: var(--accent);
 }
+
+.outage-banner {
+  position: relative;
+  background: var(--danger-soft);
+  border-top: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+.outage-banner-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+}
+
+.outage-banner .countdown {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.outage-banner button {
+  margin-left: auto;
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+.outage-banner button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+/* Drains along the bottom edge as the outage runs out */
+.outage-banner-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--danger);
+  transition: width 0.25s linear;
+}

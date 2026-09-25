@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { OutageState } from './notification-outage/outage-state';
 
 type Theme = 'light' | 'dark';
 
@@ -11,6 +12,7 @@ type Theme = 'light' | 'dark';
 })
 export class App {
   protected readonly theme = signal<Theme>(App.savedTheme());
+  protected readonly outage = inject(OutageState);
 
   constructor() {
     this.apply();
@@ -24,6 +26,10 @@ export class App {
     } catch {
       // Storage unavailable (e.g. private mode): the choice just isn't remembered.
     }
+  }
+
+  protected endOutage() {
+    this.outage.end().subscribe({ error: () => {} });
   }
 
   private apply() {

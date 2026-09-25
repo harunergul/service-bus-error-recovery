@@ -1,0 +1,75 @@
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { Observable, tap } from 'rxjs';
+
+interface Outage {
+  remainingSeconds: number;
+  totalSeconds: number;
+}
+
+/** How often to ask notification-service again, to notice outages started or ended elsewhere. */
+const RESYNC_MS = 5000;
+
+/**
+ * The simulated notification-service outage, shared by the header banner and the card on the
+ * Patient move page. The outage lives in notification-service; this counts down locally and
+ * asks again every few seconds.
+ */
+@Injectable({ providedIn: 'root' })
+export class OutageState {
+  private readonly http = inject(HttpClient);
+
+  /** When the outage ends (browser clock), or 0 when there is none. */
+  private readonly endsAt = signal(0);
+  private readonly now = signal(Date.now());
+
+  readonly totalSeconds = signal(0);
+  /** False when notification-service did not answer the last check, e.g. because it is stopped. */
+  readonly reachable = signal(true);
+
+  readonly remainingSeconds = computed(() => Math.max(0, Math.ceil((this.endsAt() - this.now()) / 1000)));
+  readonly down = computed(() => this.remainingSeconds() > 0);
+  readonly progress = computed(() =>
+    this.totalSeconds() > 0 ? (this.remainingSeconds() / this.totalSeconds()) * 100 : 0,
+  );
+  readonly countdown = computed(() => {
+    const s = this.remainingSeconds();
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  });
+
+  constructor() {
+    // Lives as long as the app (root service), so the timers are never cleared
+    setInterval(() => this.now.set(Date.now()), 250);
+    setInterval(() => this.refresh().subscribe({ error: () => {} }), RESYNC_MS);
+    this.refresh().subscribe({ error: () => {} });
+  }
+
+  refresh(): Observable<Outage> {
+    return this.track(this.http.get<Outage>('/notification/outage'));
+  }
+
+  start(seconds: number): Observable<Outage> {
+    return this.track(this.http.put<Outage>('/notification/outage', { seconds }));
+  }
+
+  end(): Observable<Outage> {
+    return this.track(this.http.delete<Outage>('/notification/outage'));
+  }
+
+  private track(request: Observable<Outage>) {
+    return request.pipe(
+      tap({
+        next: outage => {
+          this.reachable.set(true);
+          this.now.set(Date.now());
+          this.endsAt.set(outage.remainingSeconds > 0 ? Date.now() + outage.remainingSeconds * 1000 : 0);
+          this.totalSeconds.set(outage.totalSeconds);
+        },
+        error: (err: HttpErrorResponse) => {
+          // A 4xx (e.g. an invalid duration) is an answer; anything else means it is not answering
+          this.reachable.set(err.status >= 400 && err.status < 500);
+        },
+      }),
+    );
+  }
+}

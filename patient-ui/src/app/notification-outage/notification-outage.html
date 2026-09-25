@@ -4,22 +4,22 @@
       <h2>notification-service outage</h2>
       <p>While down, notification-service answers 503 to every PatientMoved and to the listener's probe.</p>
     </div>
-    @if (down()) {
+    @if (outage.down()) {
       <span class="badge danger">Down</span>
     } @else {
       <span class="badge">Up</span>
     }
   </div>
 
-  @if (down()) {
+  @if (outage.down()) {
     <div class="outage">
       <div class="outage-time">
-        <span class="countdown mono">{{ countdown() }}</span>
-        <span class="muted">left of {{ totalSeconds() }}s</span>
+        <span class="countdown mono">{{ outage.countdown() }}</span>
+        <span class="muted">left of {{ outage.totalSeconds() }}s</span>
       </div>
-      <div class="outage-bar" role="progressbar" [attr.aria-valuenow]="remainingSeconds()"
-           aria-valuemin="0" [attr.aria-valuemax]="totalSeconds()">
-        <div class="outage-fill" [style.width.%]="progress()"></div>
+      <div class="outage-bar" role="progressbar" [attr.aria-valuenow]="outage.remainingSeconds()"
+           aria-valuemin="0" [attr.aria-valuemax]="outage.totalSeconds()">
+        <div class="outage-fill" [style.width.%]="outage.progress()"></div>
       </div>
       <button type="button" class="secondary" (click)="end()">End now</button>
     </div>
