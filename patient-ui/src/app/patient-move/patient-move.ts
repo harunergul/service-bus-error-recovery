@@ -3,10 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Patient, PatientApi, errorNotice, pageNotice } from '../patient-api';
 import { PatientPicker } from '../patient-picker/patient-picker';
+import { NotificationOutage } from '../notification-outage/notification-outage';
 
 @Component({
   selector: 'app-patient-move',
-  imports: [FormsModule, RouterLink, PatientPicker],
+  imports: [FormsModule, RouterLink, PatientPicker, NotificationOutage],
   templateUrl: './patient-move.html',
 })
 export class PatientMove implements OnInit {

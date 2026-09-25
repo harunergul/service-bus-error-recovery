@@ -1,0 +1,42 @@
+.outage {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.outage-time {
+  display: flex;
+  flex-direction: column;
+}
+
+.countdown {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+}
+
+.outage-bar {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--danger-soft);
+  overflow: hidden;
+}
+
+.outage-fill {
+  height: 100%;
+  background: var(--danger);
+  transition: width 0.25s linear;
+}
+
+@media (max-width: 560px) {
+  .outage {
+    grid-template-columns: 1fr auto;
+  }
+
+  .outage-bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
