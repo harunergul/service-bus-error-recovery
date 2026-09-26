@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { errorNotice, pageNotice } from '../patient-api';
-import { OutageState } from './outage-state';
+import { OUTAGE_FAILURES, OutageFailure, OutageState } from './outage-state';
 
 /**
  * Starts and ends a simulated outage of notification-service. The outage lives in
@@ -16,10 +16,12 @@ import { OutageState } from './outage-state';
 export class NotificationOutage {
   protected readonly outage = inject(OutageState);
   protected readonly notice = pageNotice();
+  protected readonly failures = OUTAGE_FAILURES;
   protected seconds = 60;
+  protected failure: OutageFailure = 503;
 
   protected start() {
-    this.outage.start(this.seconds).subscribe({ error: err => this.notice.set(errorNotice(err)) });
+    this.outage.start(this.seconds, this.failure).subscribe({ error: err => this.notice.set(errorNotice(err)) });
   }
 
   protected end() {

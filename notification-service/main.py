@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import sqlite3
@@ -5,6 +6,7 @@ import time
 from datetime import datetime, timezone
 from http import HTTPStatus
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, Request, Response, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
@@ -47,8 +49,13 @@ class PatientMoved(BaseModel):
     movedAt: datetime
 
 
+# How notification-service fails during a simulated outage: an HTTP status, or "timeout" to not answer at all
+OutageFailure = Literal[500, 502, 503, 504, "timeout"]
+
+
 class OutageRequest(BaseModel):
     seconds: int = Field(gt=0)
+    failure: OutageFailure = 503
 
 
 class Delivered(BaseModel):
@@ -70,12 +77,15 @@ class Cleared(BaseModel):
 class Outage(BaseModel):
     remainingSeconds: float
     totalSeconds: int
+    failure: OutageFailure | None
+    """How it fails while the outage lasts; null when there is none."""
 
 
 # Simulated outage: until this monotonic time every /patient-moves request (the POST and the HEAD
-# probe) answers 503, as if the service were down. In memory only, so a restart ends it.
+# probe) fails as outage_failure says, as if the service were down. In memory only, so a restart ends it.
 outage_until = 0.0
 outage_seconds = 0
+outage_failure: OutageFailure = 503
 
 
 def outage_remaining() -> float:
@@ -86,23 +96,33 @@ def outage_remaining() -> float:
 async def simulate_outage(request: Request, call_next):
     # The /outage endpoints stay up, so an outage can always be checked and ended
     if request.url.path == "/patient-moves" and outage_remaining() > 0:
-        log.info("%s %s during simulated outage, answering 503", request.method, request.url.path)
-        return Response(status_code=HTTPStatus.SERVICE_UNAVAILABLE)
+        if outage_failure == "timeout":
+            # Holds the request unanswered, so the caller gives up on its own read timeout. When the
+            # outage ends the request is dropped, never handled: the caller has long stopped waiting.
+            log.info("%s %s during simulated outage, not answering", request.method, request.url.path)
+            while outage_remaining() > 0:
+                await asyncio.sleep(0.5)
+            return Response(status_code=HTTPStatus.SERVICE_UNAVAILABLE)
+        log.info("%s %s during simulated outage, answering %s", request.method, request.url.path, outage_failure)
+        return Response(status_code=outage_failure)
     return await call_next(request)
 
 
 @app.get("/outage")
 def get_outage() -> Outage:
     remaining = outage_remaining()
-    return Outage(remainingSeconds=remaining, totalSeconds=outage_seconds if remaining > 0 else 0)
+    if remaining == 0:
+        return Outage(remainingSeconds=0, totalSeconds=0, failure=None)
+    return Outage(remainingSeconds=remaining, totalSeconds=outage_seconds, failure=outage_failure)
 
 
 @app.put("/outage")
 def start_outage(request: OutageRequest) -> Outage:
-    global outage_until, outage_seconds
+    global outage_until, outage_seconds, outage_failure
     outage_until = time.monotonic() + request.seconds
     outage_seconds = request.seconds
-    log.warning("Simulated outage started for %ss", request.seconds)
+    outage_failure = request.failure
+    log.warning("Simulated outage started for %ss, failing with %s", request.seconds, request.failure)
     return get_outage()
 
 

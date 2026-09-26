@@ -14,7 +14,7 @@
     <div class="outage">
       <div class="outage-time">
         <span class="countdown mono">{{ outage.countdown() }}</span>
-        <span class="muted">left of {{ outage.totalSeconds() }}s</span>
+        <span class="muted">left of {{ outage.totalSeconds() }}s, {{ outage.failureLabel() }}</span>
       </div>
       <div class="outage-bar" role="progressbar" [attr.aria-valuenow]="outage.remainingSeconds()"
            aria-valuemin="0" [attr.aria-valuemax]="outage.totalSeconds()">
@@ -24,6 +24,14 @@
     </div>
   } @else {
     <form #outageForm="ngForm" (ngSubmit)="start()">
+      <label>
+        Fails with
+        <select name="failure" [(ngModel)]="failure">
+          @for (f of failures; track f.value) {
+            <option [ngValue]="f.value">{{ f.label }}</option>
+          }
+        </select>
+      </label>
       <label>Duration (seconds) <input name="seconds" type="number" min="1" [(ngModel)]="seconds" required /></label>
       <button type="submit" [disabled]="outageForm.invalid || seconds < 1">Start outage</button>
     </form>
